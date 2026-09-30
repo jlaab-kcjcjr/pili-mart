@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pili Mart POS | Sample by JLAAB Dev Studio</title>
+
+  <script>
+    try {
+      const saved = localStorage.getItem("pili-theme");
+      if (saved) document.documentElement.setAttribute("data-theme", saved);
+    } catch (e) {}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="pos">
+
+    <!-- ================= TOP BAR ================= -->
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="12" fill="var(--green)"/>
+          <path d="M20 8c6 5 8 10 8 14a8 8 0 0 1-16 0c0-4 2-9 8-14Z" fill="var(--saffron)"/>
+          <path d="M20 14v18" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <p class="brand-name">Pili Mart</p>
+          <p class="brand-sub">Legazpi branch, Terminal 04</p>
+        </div>
+      </div>
+
+      <label class="search">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="visually-hidden">Search items or scan barcode</span>
+        <input type="search" id="search" placeholder="Search item or scan barcode" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+
+      <div class="top-actions">
+        <time class="clock" id="clock"></time>
+
+        <div class="held-wrap">
+          <button class="chip-btn" id="heldBtn" type="button" aria-expanded="false" aria-controls="heldPanel">
+            Held orders <span class="badge" id="heldCount">0</span>
+          </button>
+          <div class="popover" id="heldPanel" hidden>
+            <p class="popover-title">Held orders</p>
+            <ul id="heldList"></ul>
+          </div>
+        </div>
+
+        <div class="cashier">
+          <span class="avatar" aria-hidden="true">AR</span>
+          <span class="cashier-text">Ana Reyes<small>Cashier, morning shift</small></span>
+        </div>
+
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Switch to dark theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 14.5A8.5 8.5 0 0 1 9.5 3a8.5 8.5 0 1 0 11.5 11.5Z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= CATEGORIES ================= -->
+    <nav class="categories" id="categories" aria-label="Categories"></nav>
+
+    <!-- ================= PRODUCTS ================= -->
+    <main class="catalog">
+      <div class="catalog-head">
+        <h1 id="catTitle">All items</h1>
+        <p id="catCount"></p>
+      </div>
+      <div class="grid" id="productGrid"></div>
+    </main>
+
+    <!-- ================= ORDER (RECEIPT) ================= -->
+    <aside class="order" aria-label="Current order">
+      <div class="receipt">
+        <div class="receipt-head">
+          <div>
+            <p class="order-title">Order <span id="orderNo"></span></p>
+            <p class="order-meta" id="itemCount">No items yet</p>
+          </div>
+          <div class="customer-type" role="group" aria-label="Customer type">
+            <button type="button" data-type="regular" class="is-active">Regular</button>
+            <button type="button" data-type="senior">Senior</button>
+            <button type="button" data-type="pwd">PWD</button>
+          </div>
+        </div>
+
+        <ul class="lines" id="lines"></ul>
+
+        <dl class="totals" id="totals"></dl>
+      </div>
+
+      <div class="order-actions">
+        <button class="btn btn-soft" id="holdBtn" type="button">Hold</button>
+        <button class="btn btn-soft" id="clearBtn" type="button">Clear</button>
+        <button class="btn btn-charge" id="chargeBtn" type="button" disabled>
+          <span>Charge</span>
+          <span id="chargeTotal">₱0.00</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ================= PAYMENT MODAL ================= -->
+  <div class="modal" id="payModal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+
+      <!-- Step 1: choose payment -->
+      <div id="payStep">
+        <div class="sheet-head">
+          <h2 id="payTitle">Payment</h2>
+          <button class="icon-btn" id="closePay" type="button" aria-label="Close payment">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <p class="amount-due">Amount due <strong id="dueAmount">₱0.00</strong></p>
+
+        <div class="methods" role="tablist" aria-label="Payment method">
+          <button type="button" role="tab" data-method="cash" class="is-active" aria-selected="true">Cash</button>
+          <button type="button" role="tab" data-method="gcash" aria-selected="false">GCash</button>
+          <button type="button" role="tab" data-method="card" aria-selected="false">Card</button>
+        </div>
+
+        <div class="method-panel" data-panel="cash">
+          <div class="quick-cash" id="quickCash"></div>
+          <label class="field">
+            <span>Cash received</span>
+            <input type="number" id="cashInput" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+          </label>
+          <p class="change-line">Change <strong id="changeAmount">₱0.00</strong></p>
+        </div>
+
+        <div class="method-panel" data-panel="gcash" hidden>
+          <label class="field">
+            <span>GCash reference number</span>
+            <input type="text" id="gcashInput" inputmode="numeric" placeholder="13-digit reference">
+          </label>
+          <p class="hint">Ask the customer to show the GCash confirmation, then enter the reference number.</p>
+        </div>
+
+        <div class="method-panel" data-panel="card" hidden>
+          <label class="field">
+            <span>Approval code</span>
+            <input type="text" id="cardInput" placeholder="From the card terminal slip">
+          </label>
+          <p class="hint">Tap or insert the card on the terminal, then enter the approval code.</p>
+        </div>
+
+        <button class="btn btn-charge btn-block" id="completeBtn" type="button" disabled>Complete sale</button>
+      </div>
+
+      <!-- Step 2: sale completed -->
+      <div id="doneStep" hidden>
+        <div class="done-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="30" height="30"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="done-title">Sale completed</h2>
+        <p class="done-change" id="doneChange"></p>
+
+        <div class="print-receipt" id="printReceipt"></div>
+
+        <div class="done-actions">
+          <button class="btn btn-soft" id="printBtn" type="button">Print receipt</button>
+          <button class="btn btn-charge" id="newSaleBtn" type="button">New sale</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Small message at the bottom -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
